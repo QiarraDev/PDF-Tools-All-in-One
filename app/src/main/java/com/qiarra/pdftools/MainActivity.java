@@ -16,6 +16,8 @@ public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
     private static final int REQUEST_CODE_PICK_IMAGES = 1001;
     private static final int REQUEST_CODE_PICK_PDFS = 1002;
+    private static final int REQUEST_CODE_PICK_PDF_COMPRESS = 1003;
+    private static final int REQUEST_CODE_PICK_PDF_LOCK = 1004;
     private static final int PERMISSION_CODE = 2001;
 
     @Override
@@ -43,10 +45,8 @@ public class MainActivity extends AppCompatActivity {
     private void setupClickListeners() {
         binding.cardScan.setOnClickListener(v -> pickImages());
         binding.cardMerge.setOnClickListener(v -> pickPdfs());
-        binding.cardCompress
-                .setOnClickListener(v -> Toast.makeText(this, "Compress tool coming soon", Toast.LENGTH_SHORT).show());
-        binding.cardLock
-                .setOnClickListener(v -> Toast.makeText(this, "Lock tool coming soon", Toast.LENGTH_SHORT).show());
+        binding.cardCompress.setOnClickListener(v -> pickPdfForCompress());
+        binding.cardLock.setOnClickListener(v -> pickPdfForLock());
     }
 
     private void pickImages() {
@@ -61,6 +61,18 @@ public class MainActivity extends AppCompatActivity {
         intent.setType("application/pdf");
         intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
         startActivityForResult(Intent.createChooser(intent, "Select PDF Files"), REQUEST_CODE_PICK_PDFS);
+    }
+
+    private void pickPdfForCompress() {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("application/pdf");
+        startActivityForResult(Intent.createChooser(intent, "Select PDF to Compress"), REQUEST_CODE_PICK_PDF_COMPRESS);
+    }
+
+    private void pickPdfForLock() {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("application/pdf");
+        startActivityForResult(Intent.createChooser(intent, "Select PDF to Lock"), REQUEST_CODE_PICK_PDF_LOCK);
     }
 
     @Override
@@ -94,7 +106,99 @@ public class MainActivity extends AppCompatActivity {
             if (!paths.isEmpty()) {
                 processMergePdfs(paths);
             }
+        } else if (requestCode == REQUEST_CODE_PICK_PDF_COMPRESS && resultCode == RESULT_OK && data != null) {
+            Uri uri = data.getData();
+            if (uri != null) {
+                String path = FileUtils.getPath(this, uri);
+                processCompressPdf(path);
+            }
+        } else if (requestCode == REQUEST_CODE_PICK_PDF_LOCK && resultCode == RESULT_OK && data != null) {
+            Uri uri = data.getData();
+            if (uri != null) {
+                String path = FileUtils.getPath(this, uri);
+                showPasswordDialog(path);
+            }
         }
+    }
+
+    private void showPasswordDialog(String inputPath) {
+        android.widget.EditText et = new android.widget.EditText(this);
+        et.setHint("Enter Password");
+        et.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
+
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Lock PDF")
+                .setView(et)
+                .setPositiveButton("Lock", (dialog, which) -> {
+                    String password = et.getText().toString();
+                    if (!password.isEmpty()) {
+                        processLockPdf(inputPath, password);
+                    } else {
+                        Toast.makeText(this, "Password cannot be empty", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void processLockPdf(String inputPath, String password) {
+        final android.app.ProgressDialog pd = new android.app.ProgressDialog(this);
+        pd.setMessage("Locking PDF...");
+        pd.setCancelable(false);
+        pd.show();
+
+        new Thread(() -> {
+            try {
+                String outputFolder = getExternalFilesDir(null).getAbsolutePath() + "/MyPDFs";
+                File folder = new File(outputFolder);
+                if (!folder.exists())
+                    folder.mkdirs();
+
+                String outputPath = outputFolder + "/locked_" + System.currentTimeMillis() + ".pdf";
+                PdfHelper.lockPdf(inputPath, outputPath, password);
+
+                runOnUiThread(() -> {
+                    pd.dismiss();
+                    Toast.makeText(this, "PDF Locked: " + outputPath, Toast.LENGTH_LONG).show();
+                    openPdf(outputPath);
+                });
+            } catch (Exception e) {
+                runOnUiThread(() -> {
+                    pd.dismiss();
+                    Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
+            }
+        }).start();
+    }
+
+    private void processCompressPdf(String inputPath) {
+        final android.app.ProgressDialog pd = new android.app.ProgressDialog(this);
+        pd.setMessage("Compressing PDF...");
+        pd.setCancelable(false);
+        pd.show();
+
+        new Thread(() -> {
+            try {
+                String outputFolder = getExternalFilesDir(null).getAbsolutePath() + "/MyPDFs";
+                File folder = new File(outputFolder);
+                if (!folder.exists())
+                    folder.mkdirs();
+
+                String outputPath = outputFolder + "/compressed_" + System.currentTimeMillis() + ".pdf";
+                PdfHelper.compressPdf(inputPath, outputPath);
+
+                runOnUiThread(() -> {
+                    pd.dismiss();
+                    Toast.makeText(this, "PDF Compressed: " + outputPath, Toast.LENGTH_LONG).show();
+                    openPdf(outputPath);
+                });
+            } catch (Exception e) {
+                runOnUiThread(() -> {
+                    pd.dismiss();
+                    Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
+            }
+        }).start();
     }
 
     private void processMergePdfs(List<String> paths) {

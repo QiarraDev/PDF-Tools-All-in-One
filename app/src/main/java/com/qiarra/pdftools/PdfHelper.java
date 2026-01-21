@@ -34,7 +34,9 @@ public class PdfHelper {
                 PDPage page = new PDPage(new PDRectangle(bitmap.getWidth(), bitmap.getHeight()));
                 document.addPage(page);
 
-                PDImageXObject pdImage = LosslessFactory.createFromImage(document, bitmap);
+                // Use JPEGFactory for better compression (smaller PDF size)
+                PDImageXObject pdImage = com.tom_roush.pdfbox.pdmodel.graphics.image.JPEGFactory
+                        .createFromImage(document, bitmap, 0.75f);
                 PDPageContentStream contentStream = new PDPageContentStream(document, page);
                 contentStream.drawImage(pdImage, 0, 0);
                 contentStream.close();
