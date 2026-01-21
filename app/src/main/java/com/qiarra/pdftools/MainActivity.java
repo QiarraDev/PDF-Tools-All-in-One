@@ -15,6 +15,7 @@ public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
     private static final int REQUEST_CODE_PICK_IMAGES = 1001;
+    private static final int REQUEST_CODE_PICK_PDFS = 1002;
     private static final int PERMISSION_CODE = 2001;
 
     @Override
@@ -41,8 +42,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupClickListeners() {
         binding.cardScan.setOnClickListener(v -> pickImages());
-        binding.cardMerge
-                .setOnClickListener(v -> Toast.makeText(this, "Merge tool coming soon", Toast.LENGTH_SHORT).show());
+        binding.cardMerge.setOnClickListener(v -> pickPdfs());
         binding.cardCompress
                 .setOnClickListener(v -> Toast.makeText(this, "Compress tool coming soon", Toast.LENGTH_SHORT).show());
         binding.cardLock
@@ -54,6 +54,13 @@ public class MainActivity extends AppCompatActivity {
         intent.setType("image/*");
         intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
         startActivityForResult(Intent.createChooser(intent, "Select Images"), REQUEST_CODE_PICK_IMAGES);
+    }
+
+    private void pickPdfs() {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("application/pdf");
+        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        startActivityForResult(Intent.createChooser(intent, "Select PDF Files"), REQUEST_CODE_PICK_PDFS);
     }
 
     @Override
@@ -73,7 +80,51 @@ public class MainActivity extends AppCompatActivity {
             if (!paths.isEmpty()) {
                 processImagesToPdf(paths);
             }
+        } else if (requestCode == REQUEST_CODE_PICK_PDFS && resultCode == RESULT_OK && data != null) {
+            List<String> paths = new ArrayList<>();
+            if (data.getClipData() != null) {
+                int count = data.getClipData().getItemCount();
+                for (int i = 0; i < count; i++) {
+                    paths.add(FileUtils.getPath(this, data.getClipData().getItemAt(i).getUri()));
+                }
+            } else if (data.getData() != null) {
+                paths.add(FileUtils.getPath(this, data.getData()));
+            }
+
+            if (!paths.isEmpty()) {
+                processMergePdfs(paths);
+            }
         }
+    }
+
+    private void processMergePdfs(List<String> paths) {
+        final android.app.ProgressDialog pd = new android.app.ProgressDialog(this);
+        pd.setMessage("Merging PDFs...");
+        pd.setCancelable(false);
+        pd.show();
+
+        new Thread(() -> {
+            try {
+                String outputFolder = getExternalFilesDir(null).getAbsolutePath() + "/MyPDFs";
+                File folder = new File(outputFolder);
+                if (!folder.exists())
+                    folder.mkdirs();
+
+                String outputPath = outputFolder + "/merged_" + System.currentTimeMillis() + ".pdf";
+                PdfHelper.mergePdfs(paths, outputPath);
+
+                runOnUiThread(() -> {
+                    pd.dismiss();
+                    Toast.makeText(this, "PDFs Merged: " + outputPath, Toast.LENGTH_LONG).show();
+                    openPdf(outputPath);
+                });
+            } catch (Exception e) {
+                runOnUiThread(() -> {
+                    pd.dismiss();
+                    Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
+            }
+        }).start();
     }
 
     private void processImagesToPdf(List<String> paths) {
