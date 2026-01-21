@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="dark_emerald">#046307</color>
+    <color name="emerald_green">#50C878</color>
+    <color name="ic_launcher_background">#50C878</color>
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#6200EE</color>
+    <color name="purple_700">#3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#018786</color>
+    <color name="white">#FFFFFFFF</color>
+    <string name="app_name">PDF Tools All-in-One</string>
+    <string name="error">Error occurred</string>
+    <string name="process">Process</string>
+    <string name="processing">Processing...</string>
+    <string name="select_files">Select Files</string>
+    <string name="success">Success</string>
+    <string name="tool_compress">Compress PDF</string>
+    <string name="tool_imagesToPdf">Images to PDF</string>
+    <string name="tool_lock">Lock PDF</string>
+    <string name="tool_merge">Merge PDF</string>
+    <string name="tool_scan">Scan to PDF</string>
+    <style name="Theme.PDFToolsAllInOne" parent="Theme.Material3.DayNight.NoActionBar">
+        
+        <item name="colorPrimary">@color/emerald_green</item>
+        <item name="colorOnPrimary">@color/white</item>
+        
+        <item name="colorSecondary">@color/teal_200</item>
+        <item name="colorOnSecondary">@color/black</item>
+        
+        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+        
+    </style>
+</resources>

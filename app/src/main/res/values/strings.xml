@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">PDF Tools All-in-One</string>
+    <string name="tool_scan">Scan to PDF</string>
+    <string name="tool_imagesToPdf">Images to PDF</string>
+    <string name="tool_merge">Merge PDF</string>
+    <string name="tool_compress">Compress PDF</string>
+    <string name="tool_lock">Lock PDF</string>
+    <string name="select_files">Select Files</string>
+    <string name="process">Process</string>
+    <string name="processing">Processing...</string>
+    <string name="success">Success</string>
+    <string name="error">Error occurred</string>
+</resources>

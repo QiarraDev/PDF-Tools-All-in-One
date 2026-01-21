@@ -1,0 +1,35 @@
+R_DEF: Internal format may change without notice
+local
+color black
+color dark_emerald
+color emerald_green
+color ic_launcher_background
+color purple_200
+color purple_500
+color purple_700
+color teal_200
+color teal_700
+color white
+drawable ic_launcher_foreground
+id cardCompress
+id cardLock
+id cardMerge
+id cardScan
+id headerView
+id tvAppName
+layout activity_main
+mipmap ic_launcher
+mipmap ic_launcher_round
+string app_name
+string error
+string process
+string processing
+string select_files
+string success
+string tool_compress
+string tool_imagesToPdf
+string tool_lock
+string tool_merge
+string tool_scan
+style Theme.PDFToolsAllInOne
+xml file_paths
